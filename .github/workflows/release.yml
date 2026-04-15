@@ -1,0 +1,77 @@
+name: Mirror Private Release
+
+on:
+  repository_dispatch:
+    types: [mirror-release]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to mirror from the private source repository
+        required: true
+      release_name:
+        description: Optional release title override
+        required: false
+      release_body:
+        description: Optional release notes override
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  mirror-release:
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_SOURCE_REPOSITORY: ${{ vars.PRIVATE_SOURCE_REPOSITORY }}
+      MIRROR_TAG: ${{ github.event.client_payload.tag || inputs.tag }}
+      MIRROR_RELEASE_NAME: ${{ github.event.client_payload.release_name || inputs.release_name }}
+      MIRROR_RELEASE_BODY: ${{ github.event.client_payload.release_body || inputs.release_body }}
+    steps:
+      - name: Validate configuration
+        run: |
+          test -n "$PRIVATE_SOURCE_REPOSITORY" || { echo "PRIVATE_SOURCE_REPOSITORY is required"; exit 1; }
+          test -n "$MIRROR_TAG" || { echo "release tag is required"; exit 1; }
+
+      - name: Checkout public repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download private release assets
+        env:
+          GH_TOKEN: ${{ secrets.PRIVATE_SOURCE_READ_TOKEN }}
+        run: |
+          mkdir -p dist
+          gh release download "$MIRROR_TAG"             --repo "$PRIVATE_SOURCE_REPOSITORY"             --dir dist             --pattern 'sonechka-*'
+
+      - name: Read private release metadata
+        id: metadata
+        env:
+          GH_TOKEN: ${{ secrets.PRIVATE_SOURCE_READ_TOKEN }}
+        run: |
+          gh release view "$MIRROR_TAG"             --repo "$PRIVATE_SOURCE_REPOSITORY"             --json name,body > release.json
+          NAME=$(jq -r '.name // empty' release.json)
+          BODY=$(jq -r '.body // empty' release.json)
+          {
+            echo "name<<EOF"
+            echo "${MIRROR_RELEASE_NAME:-$NAME}"
+            echo "EOF"
+            echo "body<<EOF"
+            if [ -n "${MIRROR_RELEASE_BODY:-}" ]; then
+              echo "$MIRROR_RELEASE_BODY"
+            else
+              echo "$BODY"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish public release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.MIRROR_TAG }}
+          name: ${{ steps.metadata.outputs.name || env.MIRROR_TAG }}
+          body: ${{ steps.metadata.outputs.body }}
+          files: dist/*
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          generate_release_notes: false
