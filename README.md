@@ -35,7 +35,7 @@ Personal, non-commercial use is permitted. **All commercial use requires a paid 
 
 ## Commercial Licensing
 
-For enterprise deployment, white-label integration, or commercial use, contact: licensing@sonechka.dev
+For enterprise deployment, white-label integration, or commercial use, contact: wxinxings@gmail.com
 
 ---
 © 2026 Art Walker. All rights reserved.
