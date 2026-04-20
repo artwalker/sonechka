@@ -1,41 +1,40 @@
-# Sonechka · Release Binaries and Docs
+# Sonechka
 
-Sonechka is a proprietary, local-first CLI agent. This public repository is the binary distribution and documentation portal only.
+Sonechka is proprietary software distributed through official release binaries.
 
-## ⚠️ PROPRIETARY SOFTWARE — NOT OPEN SOURCE
-This repository contains official binaries and documentation only. The source code is proprietary and confidential. Unauthorized use, distribution, or reverse engineering is strictly prohibited.
+## Proprietary Software
+
+This public repository is the official distribution surface for release binaries and public user documentation.
+It does not contain the private product source.
 
 ## Download
 
-Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/artwalker/sonechka/releases) page.
+Official binaries are published at:
+
+- <https://github.com/artwalker/sonechka/releases>
 
 Each release includes:
 
-- platform archives
-- `SHA256SUMS.txt` for integrity verification
-- the same operator-facing product surface documented in the public docs
+- platform binaries
+- `SHA256SUMS.txt`
+- `LICENSE.txt`
+- `sonechka-docs-user.tar.gz`
 
-## Documentation
+## User Documentation
 
-The published documentation site lives at <https://artwalker.github.io/sonechka/>.
+Public user documentation is published at:
 
-Recommended first-run path:
+- <https://artwalker.github.io/sonechka/>
+
+## Quick Start
 
 ```bash
 codex login
 sonechka setup codex --validate
-sonechka auth status
-sonechka chat --check --json --export-latest
 sonechka chat
 ```
 
 ## License
 
-Personal, non-commercial use is permitted. **All commercial use requires a paid license.** See [LICENSE](LICENSE) for full terms.
-
-## Commercial Licensing
-
-For enterprise deployment, white-label integration, or commercial use, contact: wxinxings@gmail.com
-
----
-© 2026 Art Walker. All rights reserved.
+Use of official binaries is governed by the bundled proprietary license.
+Commercial licensing: `wxinxings@gmail.com`

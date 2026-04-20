@@ -1,0 +1,45 @@
+name: Release Audit
+
+on:
+  release:
+    types: [published, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-release:
+    name: Verify public release payload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect release metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          gh release view "$TAG" --repo "$REPO" --json assets,body,name > release.json
+          jq '.' release.json
+
+      - name: Assert required assets
+        shell: bash
+        run: |
+          jq -e '.assets | map(.name) | index("SHA256SUMS.txt")' release.json >/dev/null
+          jq -e '.assets | map(.name) | any(test("^sonechka-linux-.*\\.tar\\.gz$"))' release.json >/dev/null
+          jq -e '.assets | map(.name) | any(test("^sonechka-macos-.*\\.tar\\.gz$"))' release.json >/dev/null
+          jq -e '.assets | map(.name) | any(test("^sonechka-windows-.*\\.zip$"))' release.json >/dev/null
+          jq -e '.assets | map(.name) | index("sonechka-docs-user.tar.gz")' release.json >/dev/null
+          jq -e '.assets | map(.name) | index("LICENSE.txt")' release.json >/dev/null
+
+      - name: Assert proprietary distribution notice
+        shell: bash
+        run: |
+          jq -e '.body | contains("LICENSE")' release.json >/dev/null
+          jq -e '.body | contains("Proprietary") or contains("proprietary")' release.json >/dev/null
+
+      - name: Reminder about GitHub source archives
+        shell: bash
+        run: |
+          echo "GitHub-generated source archives may still appear on the release page."
+          echo "They are acceptable only if this public repository contains no private product source."
