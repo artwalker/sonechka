@@ -1,0 +1,43 @@
+name: Block Sensitive Files
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  block-sensitive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for disallowed patterns
+        shell: bash
+        run: |
+          DISALLOWED=(
+            "src/"
+            "Cargo.toml"
+            "Cargo.lock"
+            "docs/"
+            "scripts/"
+            "operator"
+            "governance"
+            "release checklist"
+            "health export"
+            "closed-source"
+            "internal/"
+            ".rs"
+            ".sqlite"
+          )
+          FILES="$(git ls-tree -r HEAD --name-only)"
+          for pattern in "${DISALLOWED[@]}"; do
+            if printf '%s\n' "$FILES" | grep -Fq "$pattern"; then
+              echo "Blocked: found disallowed pattern '$pattern'"
+              exit 1
+            fi
+          done
+          if grep -R -i -E 'operator|governance|release checklist|health export|source checkout|transport summary|export-latest' README.md .github/workflows 2>/dev/null; then
+            echo "Blocked: found sensitive content in retained public files"
+            exit 1
+          fi
+          echo "No sensitive files detected"
